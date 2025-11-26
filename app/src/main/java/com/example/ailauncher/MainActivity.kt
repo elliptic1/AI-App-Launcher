@@ -1,6 +1,5 @@
 package com.example.ailauncher
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -14,7 +13,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.ailauncher.model.LauncherAction
 import com.example.ailauncher.ui.AILauncherTheme
 import com.example.ailauncher.ui.ChatScreen
 import com.example.ailauncher.ui.LauncherScreen
@@ -37,7 +35,7 @@ class MainActivity : ComponentActivity() {
                     uiState = uiState,
                     onAppClick = { app -> viewModel.launchApp(app) },
                     onOpenChat = { showChat = true },
-                    onActionClick = { action -> handleAction(action) }
+                    onActionClick = { action -> viewModel.onActionRequested(action) }
                 )
 
                 if (showChat) {
@@ -58,12 +56,4 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun handleAction(action: LauncherAction) {
-        val intent = when {
-            action.intentAction != null -> Intent(action.intentAction)
-            action.packageName != null -> packageManager.getLaunchIntentForPackage(action.packageName)
-            else -> null
-        }
-        intent?.let { startActivity(it) }
-    }
 }

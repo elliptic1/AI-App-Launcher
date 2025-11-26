@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
 import com.example.ailauncher.model.AppInfo
+import com.example.ailauncher.model.LauncherAction
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -28,6 +29,16 @@ class AppRepository(private val context: Context) {
         launchIntent?.let {
             it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             ContextCompat.startActivity(context, it, null)
+        }
+    }
+
+    fun launchAction(action: LauncherAction) {
+        when {
+            action.packageName != null -> launchApp(AppInfo(packageName = action.packageName, label = action.label))
+            action.intentAction != null -> {
+                val intent = Intent(action.intentAction).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
+                ContextCompat.startActivity(context, intent, null)
+            }
         }
     }
 }
