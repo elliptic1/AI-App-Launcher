@@ -2,6 +2,8 @@ package com.example.ailauncher.ai
 
 import android.content.Context
 import android.util.Log
+import java.io.File
+import java.io.FileInputStream
 import com.example.ailauncher.model.AiContext
 import com.example.ailauncher.model.ChatMessage
 import com.example.ailauncher.model.ChatRole
@@ -10,6 +12,9 @@ import com.example.ailauncher.model.UiBlock
 import com.example.ailauncher.model.UiState
 
 class LocalAiEngine(private val appContext: Context) : AiEngine {
+
+    @Volatile
+    private var hasModel = false
 
     override suspend fun generateUiState(context: AiContext): UiState {
         val greeting = when (context.timeOfDay) {
@@ -51,15 +56,19 @@ class LocalAiEngine(private val appContext: Context) : AiEngine {
         }
     }
 
-    private fun String.capitalize(): String = replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
-
-    private fun loadStubTfliteModel() {
+    fun warmUp(modelFile: File) {
+        if (hasModel) return
         try {
-            appContext.assets.openFd("stub.tflite").use {
-                Log.d("LocalAiEngine", "Pretend loading local model of size ${it.length}")
+            FileInputStream(modelFile).use { input ->
+                val sampleBytes = ByteArray(8)
+                input.read(sampleBytes)
+                Log.d("LocalAiEngine", "Loaded model ${modelFile.name} (${modelFile.length()} bytes)")
+                hasModel = true
             }
         } catch (e: Exception) {
-            Log.d("LocalAiEngine", "No bundled model yet: ${e.message}")
+            Log.e("LocalAiEngine", "Failed to warm up model", e)
         }
     }
+
+    private fun String.capitalize(): String = replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
 }

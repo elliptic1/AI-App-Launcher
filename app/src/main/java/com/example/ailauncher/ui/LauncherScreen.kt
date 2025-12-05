@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -25,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.ailauncher.model.AppInfo
 import com.example.ailauncher.model.LauncherAction
+import com.example.ailauncher.model.ModelDownloadState
 import com.example.ailauncher.model.UiBlock
 import com.example.ailauncher.model.UiState
 
@@ -33,7 +35,9 @@ fun LauncherScreen(
     uiState: UiState,
     onAppClick: (AppInfo) -> Unit,
     onOpenChat: () -> Unit,
-    onActionClick: (LauncherAction) -> Unit
+    onActionClick: (LauncherAction) -> Unit,
+    modelDownloadState: ModelDownloadState,
+    onRetryModelDownload: () -> Unit
 ) {
     Box(Modifier.fillMaxSize()) {
         LazyColumn(
@@ -56,6 +60,11 @@ fun LauncherScreen(
                 }
             }
         }
+        ModelDownloadStatus(
+            state = modelDownloadState,
+            modifier = Modifier.align(Alignment.BottomStart),
+            onRetry = onRetryModelDownload
+        )
         FloatingActionButton(
             onClick = onOpenChat,
             modifier = Modifier
@@ -132,5 +141,63 @@ private fun QuickActions(actions: List<LauncherAction>, onActionClick: (Launcher
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ModelDownloadStatus(
+    state: ModelDownloadState,
+    modifier: Modifier = Modifier,
+    onRetry: () -> Unit
+) {
+    when (state) {
+        is ModelDownloadState.Downloading -> Card(
+            modifier = modifier
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                CircularProgressIndicator(progress = state.progress.coerceIn(0, 100) / 100f)
+                Column {
+                    Text("Setting up on-device AI", style = MaterialTheme.typography.titleSmall)
+                    Text(state.message, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        }
+
+        is ModelDownloadState.Error -> Card(
+            modifier = modifier
+                .padding(16.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text("Model download failed", style = MaterialTheme.typography.titleSmall)
+                Text(state.message, style = MaterialTheme.typography.bodySmall)
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Tap to retry",
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.clickable { onRetry() }
+                )
+            }
+        }
+
+        is ModelDownloadState.Ready -> Card(
+            modifier = modifier
+                .padding(16.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text("On-device model ready", style = MaterialTheme.typography.titleSmall)
+                Text(
+                    "MobileBERT downloaded for quick offline suggestions.",
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+        }
+
+        ModelDownloadState.Idle -> {}
     }
 }

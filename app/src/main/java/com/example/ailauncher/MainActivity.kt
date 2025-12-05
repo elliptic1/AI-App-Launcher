@@ -28,6 +28,7 @@ class MainActivity : ComponentActivity() {
             AILauncherTheme {
                 val uiState by viewModel.uiState.collectAsStateWithLifecycle()
                 val chat by viewModel.chat.collectAsStateWithLifecycle()
+                val modelState by viewModel.modelDownloadState.collectAsStateWithLifecycle()
                 var showChat by remember { mutableStateOf(false) }
                 val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
@@ -35,7 +36,9 @@ class MainActivity : ComponentActivity() {
                     uiState = uiState,
                     onAppClick = { app -> viewModel.launchApp(app) },
                     onOpenChat = { showChat = true },
-                    onActionClick = { action -> viewModel.onActionRequested(action) }
+                    onActionClick = { action -> viewModel.onActionRequested(action) },
+                    modelDownloadState = modelState,
+                    onRetryModelDownload = { viewModel.ensureModel() }
                 )
 
                 if (showChat) {
